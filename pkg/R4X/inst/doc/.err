@@ -1,0 +1,5 @@
+Loading required package: operators
+Error in as.environment(pos) : 
+  no item called "package:XML" on the search list
+Calls: Sweave -> <Anonymous> -> eval -> eval -> ls
+Execution halted

@@ -1,0 +1,5 @@
+<test type="foo">
+ <bar fruit="mango"/>
+ <bar fruit="apple"/>
+ <bar fruit="pineapple"/>
+</test>

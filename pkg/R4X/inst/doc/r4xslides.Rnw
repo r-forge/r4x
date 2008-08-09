@@ -1,0 +1,558 @@
+\documentclass[smaller]{beamer}
+%\VignetteIndexEntry{The R4X package}
+%\SweaveOps{keep.source=T} 
+\newcommand{\rfun}[1]{\texttt{#1}}
+
+<<echo=FALSE,results=hide>>=
+options( width = 60 )
+options( continue = "  " )
+require( "R4X" )                                                    
+require( "XML" )  
+attach( loadNamespace("XML"), "nm:XML", pos = length( search( ))+1  ) 
+@
+
+\usetheme{Goettingen}
+
+
+\title{The R4X package}
+\subtitle{Convenient XML manipulation for R}
+\author{Romain Fran\c{c}ois}
+\usebackgroundtemplate{\includegraphics[width=\paperwidth]{pictures/gears-bright.jpg}}
+\date{ version \Sexpr{packageDescription( "R4X", fields = "Version" )} of the package, \Sexpr{packageDescription( "R4X", fields = "Date" )} }
+
+\begin{document}
+
+{
+ \usebackgroundtemplate{\includegraphics[width=\paperwidth]{pictures/gears3.jpg}} 
+ \setbeamertemplate{navigation symbols}{}
+ \begin{frame}[plain]
+\begin{center}
+
+\begin{Huge}\textcolor{white}{\sf \bfseries The R4X package}\end{Huge}
+
+\begin{Large}\textcolor{white}{\sf \bfseries Convenient XML Manipulation for R}\end{Large}
+ 
+\end{center}
+
+\begin{flushright}
+ \begin{Large}
+\textcolor{white}{\sf \bfseries Romain Fran\c{c}ois}  
+ \end{Large}
+\end{flushright}
+
+
+ \end{frame}
+}
+
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Background}
+
+\subsection{E4X}
+
+\begin{frame}
+\frametitle{E4X}
+\framesubtitle{Ecmascript (Javacript) for XML. Example from Wikipedia: \url{http://en.wikipedia.org/wiki/E4X} }
+
+\begin{semiverbatim}
+ var sales = <sales vendor="John">
+    <item type="peas" price="4" quantity="6"/>
+    <item type="carrot" price="3" quantity="10"/>
+    <item type="chips" price="5" quantity="3"/>
+  </sales>;
+ 
+alert( sales.item.(@type == "carrot").@quantity );
+alert( sales.@vendor );
+for each( var price in sales..@price ) {
+  alert( price );
+}
+\end{semiverbatim}
+ 
+\end{frame}
+
+
+\subsection{The XML package}           
+ 
+\begin{frame}
+ \frametitle{The XML Package}
+ \framesubtitle{from the $\hat{\Omega}$ project. \url{http://www.omegahat.org/RSXML/}}
+
+This package provides facilities for the S language to
+
+\begin{itemize}
+    \item parse XML files, URLs and strings, using either the DOM (Document Object Model)/tree-based approach, or the event-driven SAX (Simple API for XML) mechanism;
+    \item parse HTML documents,
+    \item perform XPath queries on a document,
+    \item generate XML content to buffers, files, URLs, and internal XML trees;
+    \item read DTDs as S objects. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+ \frametitle{The XML Package in 3 slides}
+ \framesubtitle{Creating XML content }
+
+<<keep.source=T>>=
+x <- xmlNode( "test", 
+   xmlNode( "bar", attrs = c( fruit = "mango") ), 
+   xmlNode( "bar", attrs = c( fruit = "apple" )), 
+ attrs = c(type="foo"))
+x
+class(x)
+@
+
+\end{frame}
+
+\begin{frame}
+ \frametitle{The XML package in 3 slides}
+\framesubtitle{Append content to an XML structure, the \rfun{addChildren} function}
+
+<<keep.source=T>>=
+x
+addChildren( x, 
+  xmlNode( "bar", attrs = 
+    c( fruit = "pineapple" ) ) )
+@
+\end{frame}
+
+
+\begin{frame}
+ \frametitle{The XML package in 3 slides}
+\framesubtitle{Query content of an XML structure}
+
+<<keep.source=T>>=
+# The "fruit" attribute of the first child of x
+xmlAttrs( xmlChildren(x)[[1]], "fruit" )
+# The "fruit" attribute of each child of x
+xmlApply( x, xmlAttrs, "fruit" )
+@
+\end{frame}
+
+
+
+\section{Create XML}
+
+\subsection{Create XML with R4X}
+\begin{frame}
+\frametitle{The \rfun{xml} generic function}
+\framesubtitle{The default method tries to convert strings into XML nodes, including nested nodes. Remember: Strings can be multiline in R.}
+<<keep.source=T>>=
+y <- xml( '<test><foo blah="1"/><bar/></test>')
+y <- xml( '
+  <test>
+     <foo blah="1"/>
+     <bar/>
+  </test>
+')
+y
+class( y )
+@
+\end{frame}
+
+\subsection{\texttt{brew}ing}
+\begin{frame}
+\frametitle{Dynamic content with \rfun{brew}}
+\framesubtitle{The \rfun{brew} package provides a psp-like templating framework for R. The \texttt{<\%=} operator is used by R4X to add dynamic content without
+having to use \rfun{paste} or \rfun{sprintf}. } 
+<<keep.source=T>>=
+f <- c("mango", "apple", "strawberry" )
+x <- xml( '
+  <fruits>
+    <fruit><%= f[1] %></fruit>
+    <fruit><%= f[2] %></fruit>
+    <fruit><%= f[3] %></fruit>
+  </fruits>
+')
+x 
+@
+\end{frame}
+
+\begin{frame}
+ \frametitle{More brewing}
+\framesubtitle{The full rfun{brew} syntax can be used as well as just the \texttt{<\%=}, but it can become quickly difficult to manage. See the \rfun{distill}ing feature for stronger taste...}
+
+<<keep.source=T>>=
+x <- xml( ' 
+  <fruits>
+    <%for( i in f) {%>
+      <fruit><%= i %></fruit>
+    <%}%>
+  </fruits>
+')
+x
+@
+\end{frame}
+
+
+\subsection{\texttt{distill}ing}
+\begin{frame}
+\frametitle{For stronger taste, \rfun{distill} rather than \rfun{brew} }
+\framesubtitle{Distilling consists of generating some brew templates and let \rfun{brew} do the hard work. The simplest way to use the \rfun{distill} feature
+is by wrapping R code to curly braces\footnote{Obviously this means that the code can't contain any curly braces, but we can live without surely.}. }
+
+<<keep.source=T>>=
+x <- xml( txt <- ' 
+  <fruits>
+    <fruit>{f[1]}</fruit>
+  </fruits>
+')
+x
+cat( distill( txt ) )
+@ 
+\end{frame}
+
+\begin{frame}
+\frametitle{loop generators}
+\framesubtitle{\rfun{distill} can also generate brew code to loop a variable from 1 to another variable using the special \texttt{<@>} tag. Because \rfun{brew} is so well-designed, the loop generators can be nested with no problem. See \rfun{xml.matrix} for an example.}
+
+\begin{table}
+ \centering
+\begin{tabular}{|c|c|}
+\hline
+Distilling Tag & Corresponding brew code\\
+\hline
+\texttt{<@i|n>} & \texttt{<\% for( i in 1:n)\{ \%>}\\
+\texttt{<@i\~{}x>} & \texttt{<\% for( i in x)\{ \%>}\\
+\texttt{<@i?y>} & \texttt{<\% for( i in seq(along=y) )\{ \%>}\\
+\hline
+\texttt{</@>} & \texttt{<\%\}\%>}\\
+\hline
+\end{tabular}
+\end{table}
+
+<<keep.source=T>>=
+txt <- ' <fruits>
+    <@i|length(f)>
+      <fruit>{f[i]}</fruit>
+    </@>
+  </fruits>'
+cat( distill( txt ) )
+@
+ 
+\end{frame}
+
+\begin{frame}
+ \frametitle{loop generators (2)}
+<<keep.source=T>>=
+cat( txt )
+cat( distill( txt ) )
+( x <- xml( txt ) )
+@
+\end{frame}
+
+\subsection{Adding content}
+\begin{frame}
+\frametitle{Adding content to a node}
+\framesubtitle{The \texttt{+} and \texttt{\%+=\%} operators (see package operators for details on \texttt{\%+=\%}) } 
+
+<<keep.source>>=
+y <- x + '<fruit>blueberry</fruit>'
+y 
+a <- "raspberry"
+y %+=% '<fruit>{a}</fruit>'
+y
+@
+\end{frame}
+
+\subsection{Import}
+\begin{frame}
+\frametitle{Importing XML from connections}
+\framesubtitle{Most importantly \rfun{file}s or \rfun{url} connections, but why not a \rfun{pipe}, ...} 
+
+<<>>=
+cat( readLines( "test.xml" ), sep = "\n" )
+x <- xml( file( "test.xml" ) )
+x
+<<eval=F>>=
+xml( url( "http://www.example.com/test.xml" ) )
+@
+\end{frame}
+
+\section{Manipulate XML}
+
+\subsection{Manipulate XML with R4X}
+
+<<echo=FALSE,results=hide>>=
+x <- xml( '
+<root>
+  <child id="1">
+    <subchild id = "sub1" >foo</subchild>
+    <subchild id = "sub2" >bar</subchild>
+  </child>
+  <child id="2">
+    <subchild id="a">blah</subchild>
+    <subchild id="b">bob</subchild>
+    <something id="c" />
+  </child>
+  <fruits>
+     <fruit>banana</fruit>
+     <fruit>mango</fruit>
+  </fruits>
+</root>  
+' )
+@
+
+\begin{frame}
+\frametitle{Example XML Structure}
+\framesubtitle{We will use this simple XML structure to demonstrate the slicing of objects of class \rfun{XMLNode}. } 
+
+<<echo=F>>=
+x
+@
+
+\end{frame}
+
+\subsection{XPath-like}
+
+\begin{frame}
+\frametitle{XPATH-like syntax}
+\framesubtitle{R4X defines an XPATH-like syntax to manipulate XML structures with the usual R extractors \texttt{[} and \texttt{[[}} 
+
+\begin{table}
+ \centering
+\begin{tabular}{|c|c|c|}
+\hline
+path expression & \rfun{[}  & \texttt{[[}  \\ 
+\hline
+\texttt{"child"} & list  & XMLNode  \\
+\texttt{"child/subchild"} & list & XMLNode \\
+\texttt{"child/subchild/\#"} & vector & vector \\
+\texttt{"child/subchild/\#n"} & numeric vector & numeric vector \\
+\texttt{"child/@id"} & vector & vector \\
+\texttt{"child//@id"} & vector & vector \\
+\texttt{"child/\~{}sub.*"} & list & XMLNode \\
+\texttt{"fruits"} & XMLNode & XMLNode \\
+\hline
+\end{tabular}
+\caption{Classes of result for various path expressions.}
+\end{table}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{slicing with \texttt{[[}}
+\framesubtitle{The \emph{double} square bracket \texttt{[[} behaves similarly as for lists, it gives back a single object }
+
+<<keep.source=T>>=
+x[[ "child" ]] # XMLNode, the first one
+# XMLNode, first <subchild> of first <child>
+x[[ "child/subchild" ]]
+x[[ "child/subchild/#" ]] # character vector
+x[[ "child/subchild/@id" ]] # character vector
+@ 
+\end{frame}
+
+\begin{frame}
+\frametitle{slicing with \texttt{[}}
+\framesubtitle{The \emph{single} square bracket \texttt{[} gives an XMLNode or a list of XMLNode if the path matches more than one node }
+<<keep.source=T>>=
+x[ "child" ]  # mutiple <child> : list of XMLNode
+x[ "fruits" ] # single <fruits> : XMLNode
+@
+\end{frame}
+
+\subsection{Adding content}
+
+\begin{frame}
+ \frametitle{Appending content with \texttt{[[<-.XMLNode}}
+ \framesubtitle{The \texttt{[[} extractor also works to add content to an XML structure using the XPath-like expressions.}
+<<keep.source=T>>=
+y <- xml( '<test><foo/></test>' )
+y
+type <- "foo-bar"
+y[[ "foo/bar/test" ]] <- '<test type="{type}" />'
+y
+@
+\end{frame}
+
+\begin{frame}
+ \frametitle{Appending content with \texttt{[<-.XMLNode}}
+\framesubtitle{\textcolor{red}{This is not implemented yet}. Appending content is only implemented for the double square bracket extractor at the moment. } 
+<<keep.source=T>>=
+result <- try( 
+  y[ "foo/blah" ] <- '<blah />' ,  silent = TRUE )
+class(result)
+strwrap( result, 40 )
+@
+\end{frame}
+
+\section{Examples}
+
+\subsection{RSS Reader}
+
+\begin{frame}
+\frametitle{RSS: R Site Summary}
+\framesubtitle{Definition of RSS from the w3c. See \url{http://www.w3schools.com/rss} for more information. } 
+    
+\begin{itemize}
+ \item RSS stands for Really Simple Syndication
+ \item RSS allows you to syndicate your site content
+ \item RSS defines an easy way to share and view headlines and content
+ \item RSS files can be automatically updated
+ \item RSS allows personalized views for different sites
+ \item RSS is written in XML
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{RSS: Example}
+\framesubtitle{Example RSS feed from \url{http://www.w3schools.com/rss}.}
+\begin{semiverbatim}
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<rss version="2.0">
+<channel>
+  <title>W3Schools Home Page</title>
+  <link>http://www.w3schools.com</link>
+  <description>
+     Free web building tutorials
+  </description>
+  <item>
+    <title>RSS Tutorial</title>
+    <link>http://www.w3schools.com/rss</link>
+    <description>
+        New RSS tutorial on W3Schools
+    </description>
+  </item>
+</channel>
+</rss>
+\end{semiverbatim}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Fetching data from Planet R}
+\framesubtitle{planet R (\url{http://planetr.stderr.org/}) aggreggates information from several R related sites as an RSS feed. }
+
+<<keep.source=T,eval=F>>=
+planetr <- xml( 
+  url( "http://planetr.stderr.org/rss10.xml ") )
+<<echo=F>>=
+planetr <- xml( file("rss10.xml" ))
+<<keep.source=T,echo=T>>=
+titles <- planetr[ "item/title/#" ]
+cat( strwrap( head( titles, 4 ), 50, exdent = 4 ), 
+  sep = "\n" )
+@
+\end{frame}
+
+
+\subsection{Tag cloud}
+\begin{frame}
+\frametitle{Tag cloud}
+\framesubtitle{Generating a simple tag cloud. See the \rfun{operators} package for details. Generated with the following script from the words used in all descriptions of R packages.}
+<<print=F,echo=F>>=
+commonWords <- c("the", "and", "of", "for", "a", "to", "in", 
+  "is", "this", "with", "are", "on", "as", "by", "from", 
+  "be", "or", "an", "that", "can", "it", "two", "at", 
+  "more", "not", "also", "some", "such", "use", "which", 
+  "new", "both", "see", 
+  "all", "was", "well", "each", "given", 
+  "these", "via", "based", "between", "contains", "any", "within", 
+  "several", "under", "only", "their", "we", "many", "into", 
+  "least", "but", "have", "one", "when", "used", "other", 
+  "has", "will", "there", "those", "been", "than", "you", "where")
+<<keep.source=T>>=
+all <- casefold( readLines( "descriptions.txt" ) )
+all <- all %s~% "/[^\\w\\s]//pg" %/~% "\\s+"
+all <- all %without% commonWords
+tab <- rev( sort( table( all ) ) )[1:250]
+words <- names(tab)
+for( word in words ){
+ if( ( plural <- sprintf("%ss", word) ) %in% words ) { 
+   tab[word] <- tab[word] + tab[plural] 
+   tab[plural] <- 0
+ }
+}
+tab <- tab[ tab != 0 ]
+tab <- tab[ sort(names(tab)) ]
+ncuts <- 8
+sizes <- as.numeric( cut ( tab, ncuts ) )
+refs <- round( seq( 10,24, length=ncuts) )
+words <- names(tab)
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Tag cloud}
+\framesubtitle{Generating a simple tag cloud. R4X code to write the html page.}
+<<keep.source=T>>=
+tags <- xml( '
+  <html>
+    <head>
+    <style type="text/css">
+    <@i|ncuts>
+          .cl{i}{
+             font-size:{refs[i]}pt;
+          }
+    </@>
+    </style>
+    </head>
+    <body>
+      <@i|length(tab)>
+        <span class="cl{sizes[i]}">{words[i]}</span>
+      </@> 
+    </body>
+  </html>' )
+  tags %>% "tags.html"
+@
+\end{frame}
+
+{
+ \usebackgroundtemplate{\includegraphics[width=\paperwidth]{pictures/tags2.png}} 
+ \setbeamertemplate{navigation symbols}{}
+ \begin{frame}[plain]
+ \end{frame}
+}
+
+
+
+\begin{frame}[plain]
+
+\end{frame}
+ 
+\section{References}
+
+\begin{frame}
+\frametitle{References}
+
+XML references from W3C: 
+\begin{itemize}
+ \item E4X: \url{http://www.w3schools.com/e4x/default.asp}
+ \item RSS: \url{http://www.w3schools.com/rss/default.asp}
+\end{itemize}
+
+R References
+\begin{itemize}
+ \item \rfun{XML} ($\hat{\Omega}$). \url{http://www.omegahat.org/RSXML/}
+ \item \rfun{brew}: \url{http://www.rforge.net/brew/}
+ \item \rfun{operators}: \url{http://www.mango-solutions.com}
+\end{itemize}
+
+\end{frame}
+
+{
+ \usebackgroundtemplate{\includegraphics[width=\paperwidth]{pictures/gears3.jpg}} 
+ \setbeamertemplate{navigation symbols}{}
+ \begin{frame}[plain]
+
+\begin{Huge}\textcolor{white}{\sf \bfseries Questions ?}\end{Huge}
+
+\begin{flushright}
+ \begin{Large}
+\textcolor{white}{\bfseries \ttfamily rfrancois@mango-solutions.com}  
+ \end{Large}
+\end{flushright}
+
+
+ \end{frame}
+}
+
+
+
+\end{document}
