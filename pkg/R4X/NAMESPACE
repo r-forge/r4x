@@ -1,0 +1,10 @@
+export( xml, distill)
+
+S3method("[", XMLNode)
+S3method("[[", XMLNode)
+S3method("[<-", XMLNode)
+S3method("[[<-", XMLNode)
+S3method("+", XMLNode)
+
+S3method("xml", "default")
+

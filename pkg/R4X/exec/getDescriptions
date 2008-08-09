@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# TODO: add the initial wget statement
+rm descriptions.txt
+packages=$(grep '<TD><A HREF="..' index.html | sed "s/.*\/packages\///" | sed "s/\/.*//")
+for pack in $packages
+do   
+  mkdir $pack
+  wget -q "http://cran.r-project.org/web/packages/$pack/index.html" -O "$pack/index.html"
+  sed -n '/<p>/,/<P>/p' $pack | sed "s/<[^>]*>//g" >> descriptions.txt
+  rm -fr $pack
+done
+

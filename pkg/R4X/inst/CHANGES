@@ -1,0 +1,25 @@
+0.1
+  [0.1-15]
+    - fixed unit test
+    - added test run on R CMD check
+  [0.1-14]
+    - added brew and env arguments to `distill` and handle the `brew`ing there
+  [0.1-13]
+    - bugfix in .xmlnode_extract_plus
+    - bugfix in regex detection when calling .xmlnode_extract_plus or .xmlnode_extract_square
+  [0.1-12]
+    - added "plus" syntax into paths. x[ "test/a+1" ] means the node that is right after <a>. 
+      x["test/a-1"] the node right before <a>. see function .xmlnode_extract_plus
+  [0.1-11]
+    - updated .xmlnode_extract_content to correctly deal with text content of nodes that have childs
+  [0.1-10]
+    - simplified the structure of [.XMLNode
+    - created many really low level functions (.xmlnode_extract_*) to take some of the load of [.XMLNode
+    - added detection of square bracket parts of xpath expressions
+    - using do.call(c,.) when using [.XMLNode to extract same childs of multiple nodes
+    - bugfix when using numbers in the xpath expression in [.XMLNode
+  [0.1-9] 
+    - distill becomes a single function rather than a generic function with methods
+    - simplified distill function, no more environment used
+    - CHANGES file added
+    - using sys.frame(sys.parent( )) instead of environment() to fix problem with brewing in wrong places
