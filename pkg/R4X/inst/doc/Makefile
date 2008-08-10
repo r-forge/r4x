@@ -3,6 +3,7 @@ r4xslides.pdf:
 	Rscript --vanilla -e "Sweave('r4xslides.Rnw')"
 	sed "s/begin{frame}/begin{frame}[fragile]/" r4xslides.tex > tmp.tex
 	sed "s/\[fragile\]\[plain\]/[plain]/" tmp.tex > r4xslides.tex
+	rm tmp.tex
 	pdflatex r4xslides.tex
 	pdflatex r4xslides.tex
 clean:
