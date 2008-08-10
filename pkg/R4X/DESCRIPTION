@@ -1,8 +1,8 @@
 Package: R4X
 Type: Package
 Title: Manipulation of XML structures
-Version: 0.1-18
-Date: 2008-07-22
+Version: 0.1-20
+Date: 2008-08-10
 Author: Romain Francois <rfrancois@mango-solutions.com>
 Maintainer: Mango Solutions <suppport@mango-solutions.com>
 Description: Manipulation of XML structures. Attempt to port some of the concepts from
