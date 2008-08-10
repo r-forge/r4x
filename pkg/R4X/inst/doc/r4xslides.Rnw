@@ -136,7 +136,7 @@ xmlApply( x, xmlAttrs, "fruit" )
 
 \section{Create XML}
 
-\subsection{Create XML with R4X}
+\subsection{The \rfun{xml} method}
 \begin{frame}
 \frametitle{The \rfun{xml} generic function}
 \framesubtitle{The default method tries to convert strings into XML nodes, including nested nodes. Remember: Strings can be multiline in R.}
@@ -156,7 +156,7 @@ class( y )
 \subsection{\texttt{brew}ing}
 \begin{frame}
 \frametitle{Dynamic content with \rfun{brew}}
-\framesubtitle{The \rfun{brew} package provides a psp-like templating framework for R. The \texttt{<\%=} operator is used by R4X to add dynamic content without
+\framesubtitle{The \rfun{brew} package provides a jsp-like templating framework for R. The \texttt{<\%=} operator is used by R4X to add dynamic content without
 having to use \rfun{paste} or \rfun{sprintf}. } 
 <<keep.source=T>>=
 f <- c("mango", "apple", "strawberry" )
@@ -455,7 +455,8 @@ commonWords <- c("the", "and", "of", "for", "a", "to", "in",
   "these", "via", "based", "between", "contains", "any", "within", 
   "several", "under", "only", "their", "we", "many", "into", 
   "least", "but", "have", "one", "when", "used", "other", 
-  "has", "will", "there", "those", "been", "than", "you", "where")
+  "has", "will", "there", "those", "been", "than", "you", "where", 
+  "eg", "without", "so")
 <<keep.source=T>>=
 all <- casefold( readLines( "descriptions.txt" ) )
 all <- all %s~% "/[^\\w\\s]//pg" %/~% "\\s+"
@@ -510,12 +511,6 @@ tags <- xml( '
  \end{frame}
 }
 
-
-
-\begin{frame}[plain]
-
-\end{frame}
- 
 \section{References}
 
 \begin{frame}
@@ -531,8 +526,14 @@ R References
 \begin{itemize}
  \item \rfun{XML} ($\hat{\Omega}$). \url{http://www.omegahat.org/RSXML/}
  \item \rfun{brew}: \url{http://www.rforge.net/brew/}
- \item \rfun{operators}: \url{http://www.mango-solutions.com}
+ \item \rfun{operators}: \url{http://r-forge.r-project.org/projects/operators}
 \end{itemize}
+
+Gears picture
+\begin{itemize}
+ \item \url{http://www.flickr.com/photos/gamin/383003317/}
+\end{itemize}
+
 
 \end{frame}
 
