@@ -1,7 +1,10 @@
 
 
-`[.XMLNode` <- function(x, i, verbose = TRUE ){
-  out <- if( is.character(i) ){
+`[.XMLNode` <- function(x, i, verbose = TRUE, drop = getOption("R4X.drop") ){
+  old.op <- options( R4X.drop = drop)
+	on.exit( options(old.op) ) 
+	
+	out <- if( is.character(i) ){
     if( i %~% "/" ){ # split i and continue the subset
       i <- i %/~% "/"
       thisOne <- i[1]
@@ -43,7 +46,15 @@
     }
     
   } else x$children[i]
-  out
+  
+	# workaround for the addition of the drop argument
+	drop <- getOption("R4X.drop")
+	if(!drop && out %of% "XMLNode" ){
+		nam <- xmlName(out)
+		out <- list( out )
+		names(out) <- nam
+	}
+	out
 }
 
 .xmlnode_extract_regex <- function(x,i){   

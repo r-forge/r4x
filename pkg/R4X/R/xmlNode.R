@@ -41,12 +41,14 @@
     # FIXME: nasty bug when x is used within brew, because 
     #   x is an arument of the xml function
     # bugfix #1803, using sink instead of capture.output
+		# TODO: don't use a temp file but a textConnection for efficiency
     tempf <- tempfile()
-    sink(tempf)
-    brew(text=txt, env = env)
-    sink()
+    brew.try <- try( brew(text=txt, env = env, output = tempf), silent = TRUE )
     .txt <- readLines(tempf)
     unlink(tempf)
+		if( class( brew.try) == "try-error" ){
+			stop( brew.try )
+		}
     
     txt <- if( .txt %~+% "<@" ){
       env[["x"]] <- if( "x" %in% ls(parent.env(env))) parent.env(env)[["x"]] else stop("brewing problem")
@@ -58,7 +60,8 @@
       txt
     }
     ### converts warnings into erros and reports the error if fail is TRUE
-    node <- tryCatch( 
+    
+		node <- tryCatch( 
       xmlTreeParse( txt, asText = TRUE )$doc$children[[1]], 
       error = catchFun, warning = catchFun )
     if(.stop) stop("problem in parsing node")  
