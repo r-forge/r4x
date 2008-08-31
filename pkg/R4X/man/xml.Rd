@@ -10,7 +10,7 @@
 }
 \usage{
 xml(x, ..., env = sys.frame(sys.parent()))
-\method{[}{XMLNode}(x, i  , verbose = TRUE)
+\method{[}{XMLNode}(x, i  , verbose = TRUE, drop = getOption("R4X.drop") )
 \method{[[}{XMLNode}(x, i)
 \method{[}{XMLNode}(x, i) <- value
 \method{[[}{XMLNode}(x, i) <- value
@@ -23,6 +23,10 @@ xml(x, ..., env = sys.frame(sys.parent()))
   \item{i}{index of extraction}             
   \item{value}{replacement}  
   \item{verbose}{Print additional information}
+	\item{drop}{Used with the single extractor. When TRUE and the result of the extract is a single node, 
+	it is returned as an \code{XMLNode} object, otherwise as a list of one \code{XMLNode}. 
+	The \code{drop} argument is set by the option \code{R4X.drop} which is set to TRUE when the 
+	R4X package is attached. }
 }
 \details{
   Distilling as defined in \code{\link{distill}} can be used to build 
@@ -115,7 +119,9 @@ x <- xml( '<root>
 </root>' )
 x[ 'fruits/fruit' ]            # list of two XMLNode
 x[ 'fruits/fruit/#' ]          # c("banana", "mango" )
-x[ 'fruits' ]                  # one XMLNode
+x[ 'fruits' ]                  # one XMLNode, example with drop set to TRUE
+x[ 'fruits', drop = TRUE  ]    # same, but explicit
+x[ 'fruits', drop = FALSE ]    # same, but the result is returned as a list of one XMLNode
 x[ 'child/subchild' ]          # list of 4 XMLNode
 x[ 'child/subchild/@id' ]      # vector of id attributes
 x[ 'child/~^s' ]               # list of 5 XMLNode
