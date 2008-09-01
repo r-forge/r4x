@@ -38,33 +38,30 @@
       txt <- distill( txt )
     }
     
-    # FIXME: nasty bug when x is used within brew, because 
-    #   x is an arument of the xml function
-    # bugfix #1803, using sink instead of capture.output
-		# TODO: don't use a temp file but a textConnection for efficiency
-    tempf <- tempfile()
-    brew.try <- try( brew(text=txt, env = env, output = tempf), silent = TRUE )
-    .txt <- readLines(tempf)
-    unlink(tempf)
-		if( class( brew.try) == "try-error" ){
+		# brew the distill'ed text and store the result in the variable `brewed`
+    con <- textConnection( "brewed", "w" )
+		on.exit( close(con) ) 
+		brew.try <- try( brew(text=txt, env = env, output = con), silent = TRUE )
+    if( class( brew.try) == "try-error" ){
 			stop( brew.try )
 		}
-    
-    txt <- if( .txt %~+% "<@" ){
-      env[["x"]] <- if( "x" %in% ls(parent.env(env))) parent.env(env)[["x"]] else stop("brewing problem")
-      capture.output( brew(text=txt, env = env) )
-    } else .txt
-    .stop <- F
+		txt <- brewed
+		
+    .stop <- FALSE
+		.msg <- ""
     catchFun <- function(w){
-      if(fail) .stop <<- T 
+      if(fail){
+				.msg <<- w
+				.stop <<- TRUE
+			}
       txt
     }
     ### converts warnings into erros and reports the error if fail is TRUE
     
-		node <- tryCatch( 
+		node <- tryCatch(          
       xmlTreeParse( txt, asText = TRUE )$doc$children[[1]], 
       error = catchFun, warning = catchFun )
-    if(.stop) stop("problem in parsing node")  
+    if(.stop) stop(paste("problem in parsing node:", as.character(w)))  
     if( class(node) ==  "XMLNode" ){
       node
     } else asXMLNode( txt )
