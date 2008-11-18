@@ -66,7 +66,7 @@
 		# paste("problem in parsing node:", as.character(w)), but w did not exist in this context
 		# hence an error would occur.
 		if(.stop) stop(paste("problem in parsing node:", paste(as.character(txt), collapse = "\n")))  
-		if( class(node) ==  "XMLNode" ){
+		if( class(node) %of%  "XMLNode" ){
 			node
 		} else asXMLNode( txt )
 	}
