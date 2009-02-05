@@ -1,0 +1,16 @@
+<books>   
+   <book id="1">
+      <author>Capinsky, Marek</author>
+      <title> Measure, Integral, Probability </title>
+      <genre>Math</genre>
+      <price>30.00</price>
+      <description> Introduction to measure-theoretic probability. </description>
+   </book>
+   <book id="2">
+      <author>Tuckman, Bruce</author>
+      <title> Fixed Income Securities </title>
+      <genre> Finance </genre>
+      <price>40.00</price>
+      <description> Basic principles of fixed income finance. </description>
+   </book>
+</books>
